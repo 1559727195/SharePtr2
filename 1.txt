@@ -1,0 +1,8 @@
+05-24 14:07:35.871 18287-18582/? E/PLAYER_ODK: getPreferenceDirFile
+                                               java.lang.NoSuchFieldException: No field mFile in class Lcom/tencent/mqq/shared_file_accessor/n; (declaration of 'com.tencent.mqq.shared_file_accessor.n' appears in base.apk)
+                                                   at java.lang.Class.getDeclaredField(Native Method)
+                                                   at com.tencent.odk.player.client.c.o.a(ProGuard:97)
+                                                   at com.tencent.odk.player.client.c.o.run(ProGuard:73)
+                                                   at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1133)
+                                                   at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:607)
+                                                   at java.lang.Thread.run(Thread.java:776)
