@@ -4,6 +4,8 @@
 
 #include <jni.h>
 #include <pthread.h>
+#include <cstdio>
+#include <unistd.h>
 
 
 // Native worker thread arguments
@@ -105,6 +107,28 @@ Java_com_massky_shareptr_MainActivity_nativeWorker(JNIEnv *env, jobject instance
                                                    jint interations) {
 
     // TODO
+    for (jint i = 0; i < interations;i++) {
+        char message[26];
+
+        sprintf(
+                message,"Worker %d: Interation %d",
+                id,i
+        );
+
+        jstring  messageString = env->NewStringUTF(message);
+
+        env->CallVoidMethod(
+          instance,
+          gOnNativeMessage
+          ,messageString
+        );
+
+        if (NULL != env->ExceptionOccurred()) {
+            break;
+        }
+
+        sleep(1);
+    }
 
 }
 
