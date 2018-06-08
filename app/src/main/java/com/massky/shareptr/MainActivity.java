@@ -99,8 +99,8 @@ public class MainActivity extends AppCompatActivity {
      * @param iterations iteration count.
      */
     private void startThreads(int threads, int iterations) {
-//        posixThreads(threads, iterations);
-            javaThreads(threads,iterations);
+        posixThreads(threads, iterations);
+//            javaThreads(threads,iterations);
     }
 
     /**

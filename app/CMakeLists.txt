@@ -33,6 +33,7 @@ find_library( # Sets the name of the path variable.
               ADD_SUBDIRECTORY(src/main/cpp/one)
               ADD_SUBDIRECTORY(src/main/cpp/two)
               ADD_SUBDIRECTORY(src/main/cpp/posix_thread)
+              ADD_SUBDIRECTORY(src/main/cpp/echo)
 
 # Specifies libraries CMake should link to your target library. You
 # can link multiple libraries, such as libraries you define in this

@@ -16,6 +16,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".EchoServerActivity"
+            android:label="@string/title_activity_echo_server"
+            android:launchMode="singleTop" >
+
+        </activity>
+
+        <activity
+            android:name=".EchoClientActivity"
+            android:label="@string/title_activity_echo_client"
+            android:launchMode="singleTop" >
+
+        </activity>
     </application>
 
 </manifest>
