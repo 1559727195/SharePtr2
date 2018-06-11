@@ -93,13 +93,80 @@ static void ThrowErrnoException(
 
 }
 
-extern "C"
-JNIEXPORT void JNICALL
-Java_com_massky_shareptr_EchoServerActivity_nativeStartTcpServer(JNIEnv *env, jobject instance,
-                                                                 jint port) {
+/**
+ * Block and receive data from the socket into the buffer.
+ *
+ * @param env JNIEnv interface.
+ * @param obj object instance.
+ * @param sd socket descriptor.
+ * @param buffer data buffer.
+ * @param bufferSize buffer size.
+ * @return receive size.
+ * @throws IOException
+ */
+static ssize_t ReceiveFromSocket(
+        JNIEnv *env,
+        jobject obj,
+        int sd,
+        char *buffer,
+        size_t bufferSize) {
+    // Block and receive data from the socket into the buffer
+    LogMessage(env, obj, "Receiving from the socket...");
+    ssize_t recvSize = recv(sd, buffer, bufferSize - 1, 0);
 
-    // TODO
+    // If receive is failed
+    if (-1 == recvSize) {
+        // Throw an exception with error number
+        ThrowErrnoException(env, "java/io/IOException", errno);
+    } else {
+        // NULL terminate the buffer to make it a string
+        buffer[recvSize] = NULL;
 
+        // If data is received
+        if (recvSize > 0) {
+            LogMessage(env, obj, "Received %d bytes: %s", recvSize, buffer);
+        } else {
+            LogMessage(env, obj, "Client disconnected.");
+        }
+    }
+
+    return recvSize;
+}
+
+/**
+ * Send data buffer to the socket.
+ *
+ * @param env JNIEnv interface.
+ * @param obj object instance.
+ * @param sd socket descriptor.
+ * @param buffer data buffer.
+ * @param bufferSize buffer size.
+ * @return sent size.
+ * @throws IOException
+ */
+static ssize_t SendToSocket(
+        JNIEnv *env,
+        jobject obj,
+        int sd,
+        const char *buffer,
+        size_t bufferSize) {
+    // Send data buffer to the socket
+    LogMessage(env, obj, "Sending to the socket...");
+    ssize_t sentSize = send(sd, buffer, bufferSize, 0);
+
+    // If send is failed
+    if (-1 == sentSize) {
+        // Throw an exception with error number
+        ThrowErrnoException(env, "java/io/IOException", errno);
+    } else {
+        if (sentSize > 0) {
+            LogMessage(env, obj, "Sent %d bytes: %s", sentSize, buffer);
+        } else {
+            LogMessage(env, obj, "Client disconnected.");
+        }
+    }
+
+    return sentSize;
 }
 
 static int NewTcpSocket(JNIEnv *env, jobject obj) {
@@ -159,7 +226,6 @@ static unsigned short GetSocketPort(
 
     return port;
 }
-
 
 /**
  * Listens on given socket with the given backlog for
@@ -258,111 +324,13 @@ static int AcceptOnSocket(
     return clientSocket;
 }
 
-/**
- * Block and receive data from the socket into the buffer.
- *
- * @param env JNIEnv interface.
- * @param obj object instance.
- * @param sd socket descriptor.
- * @param buffer data buffer.
- * @param bufferSize buffer size.
- * @return receive size.
- * @throws IOException
- */
-static ssize_t ReceiveFromSocket(
-        JNIEnv *env,
-        jobject obj,
-        int sd,
-        char *buffer,
-        size_t bufferSize) {
-    // Block and receive data from the socket into the buffer
-    LogMessage(env, obj, "Receiving from the socket...");
-    ssize_t recvSize = recv(sd, buffer, bufferSize - 1, 0);
-
-    // If receive is failed
-    if (-1 == recvSize) {
-        // Throw an exception with error number
-        ThrowErrnoException(env, "java/io/IOException", errno);
-    } else {
-        // NULL terminate the buffer to make it a string
-        buffer[recvSize] = NULL;
-
-        // If data is received
-        if (recvSize > 0) {
-            LogMessage(env, obj, "Received %d bytes: %s", recvSize, buffer);
-        } else {
-            LogMessage(env, obj, "Client disconnected.");
-        }
-    }
-
-    return recvSize;
-}
-
-/**
- * Send data buffer to the socket.
- *
- * @param env JNIEnv interface.
- * @param obj object instance.
- * @param sd socket descriptor.
- * @param buffer data buffer.
- * @param bufferSize buffer size.
- * @return sent size.
- * @throws IOException
- */
-static ssize_t SendToSocket(
-        JNIEnv *env,
-        jobject obj,
-        int sd,
-        const char *buffer,
-        size_t bufferSize) {
-    // Send data buffer to the socket
-    LogMessage(env, obj, "Sending to the socket...");
-    ssize_t sentSize = send(sd, buffer, bufferSize, 0);
-
-    // If send is failed
-    if (-1 == sentSize) {
-        // Throw an exception with error number
-        ThrowErrnoException(env, "java/io/IOException", errno);
-    } else {
-        if (sentSize > 0) {
-            LogMessage(env, obj, "Sent %d bytes: %s", sentSize, buffer);
-        } else {
-            LogMessage(env, obj, "Client disconnected.");
-        }
-    }
-
-    return sentSize;
-}
-
-static void ConnectToAddress(JNIEnv *env, jobject instance,
-                             int sd,
-                             const char *ip,
-                             unsigned short port) {
-    LogMessage(env, instance, "Connecting to %s:%uh...", ip, port);
-
-    struct sockaddr_in address;
-    memset(&address, 0, sizeof(address));
-    address.sin_family = PF_INET;
-
-    if (0 == inet_aton(ip, &(address.sin_addr))) {
-        address.sin_port = htons(port);
-
-        // Connect to address
-        if (-1 == connect(sd, (const sockaddr *) &address, sizeof(address))) {
-            // Throw an exception with error number
-            ThrowErrnoException(env, "java/io/IOException", errno);
-        } else {
-            LogMessage(env, instance, "Connected.");
-        }
-    }
-}
-
-
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_massky_shareptr_EchoServerActivity_nativeStartUdpServer(JNIEnv *env, jobject instance,
+Java_com_massky_shareptr_EchoServerActivity_nativeStartTcpServer(JNIEnv *env, jobject instance,
                                                                  jint port) {
-    //
+
+    // TODO
+
     int serverSocket = NewTcpSocket(env, instance);
 
     if (NULL == env->ExceptionOccurred()) {
@@ -416,6 +384,116 @@ Java_com_massky_shareptr_EchoServerActivity_nativeStartUdpServer(JNIEnv *env, jo
     if (serverSocket > 0) {
         close(serverSocket);
     }
+
+}
+
+
+static void ConnectToAddress(JNIEnv *env, jobject instance,
+                             int sd,
+                             const char *ip,
+                             unsigned short port) {
+    LogMessage(env, instance, "Connecting to %s:%uh...", ip, port);
+
+    struct sockaddr_in address;
+    memset(&address, 0, sizeof(address));
+    address.sin_family = PF_INET;
+
+    if (0 == inet_aton(ip, &(address.sin_addr))) {
+        address.sin_port = htons(port);
+
+        // Connect to address
+        if (-1 == connect(sd, (const sockaddr *) &address, sizeof(address))) {
+            // Throw an exception with error number
+            ThrowErrnoException(env, "java/io/IOException", errno);
+        } else {
+            LogMessage(env, instance, "Connected.");
+        }
+    }
+}
+
+static int NewUdpSocket(JNIEnv *env, jobject obj) {
+    LogMessage(env, obj, "Construct a new UDP socket...");
+    int udpSocket = socket(PF_INET, SOCK_DGRAM, 0);
+    if (-1 == udpSocket) {
+        ThrowErrnoException(env, "java/io/IOException", errno);
+    }
+
+    return udpSocket;
+}
+
+/**
+ * Block and receive datagram from the socket into
+ * the buffer, and populate the client address.
+ *
+ * @param env JNIEnv interface.
+ * @param obj object instance.
+ * @param sd socket descriptor.
+ * @param address client address.
+ * @param buffer data buffer.
+ * @param bufferSize buffer size.
+ * @return receive size.
+ * @throws IOException
+ */
+static ssize_t ReceiveDatagramFromSocket(
+        JNIEnv *env,
+        jobject obj,
+        int sd,
+        struct sockaddr_in *address,
+        char *buffer,
+        size_t bufferSize) {
+//    socklen_t addressLength = sizeof(struct sockaddr_in);
+//
+//    // Receive datagram from socket
+//    LogMessage(env, obj, "Receiving from the socket...");
+//    ssize_t recvSize = recvfrom(sd, buffer, bufferSize, 0,
+//                                (struct sockaddr*) address,
+//                                &addressLength);
+
+    socklen_t addressLength = sizeof(struct sockaddr_in);
+    LogMessage(env, obj, "Receiving from the socket...");
+    ssize_t recvSize = recvfrom(sd, buffer, bufferSize, 0,
+                                (struct sockaddr *) address, &addressLength);
+//    // If receive is failed
+//    if (-1 == recvSize)
+//    {
+//        // Throw an exception with error number
+//        ThrowErrnoException(env, "java/io/IOException", errno);
+//    }
+//    else
+//    {
+//        // Log address
+//        LogAddress(env, obj, "Received from", address);
+//
+//        // NULL terminate the buffer to make it a string
+//        buffer[recvSize] = NULL;
+//
+//        // If data is received
+//        if (recvSize > 0)
+//        {
+//            LogMessage(env, obj, "Received %d bytes: %s", recvSize, buffer);
+//        }
+//    }
+    if (-1 == recvSize) {
+        ThrowErrnoException(env, "java/io/IOException", errno);
+    } else {
+        LogAddress(env, obj, "Received from", address);
+        buffer[recvSize] = NULL;
+
+        if (recvSize > 0) {
+            LogMessage(env, obj, "Received %d bytes: %s", recvSize, buffer);
+        }
+    }
+
+    return recvSize;
+}
+
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_massky_shareptr_EchoServerActivity_nativeStartUdpServer(JNIEnv *env, jobject instance,
+                                                                 jint port) {
+    //
+
 
 }
 
